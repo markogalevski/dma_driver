@@ -3,8 +3,6 @@
 
 #include "stm32f411xe.h"
 
-
-
 #define EN_SET 1
 #define EN_RESET 0
 
