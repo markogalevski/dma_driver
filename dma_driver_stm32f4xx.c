@@ -2,6 +2,7 @@
 
 static void dma_clear_interrupt_flags(dma_handle_t *hdma);
 static void dma_config_endpoints(dma_handle_t *hdma);
+static void dma_enable(dma_handle_t *hdma);
 
 void dma_transfer(dma_handle_t *hdma)
 {
@@ -26,6 +27,12 @@ void dma_transfer(dma_handle_t *hdma)
   dma_enable(hdma);
 }
 
+void dma_disable(dma_handle_t *hdma)
+{
+  hdma->stream->CR &= ~(DMA_SxCR_EN_Msk);
+  while(hdma->stream->CR & DMA_SxCR_EN_Msk); //wait for dma to be disabled
+}
+
 static void dma_clear_interrupt_flags(dma_handle_t *hdma)
 {
     uint32_t stream_address = *((uint32_t *) &hdma->stream);
@@ -42,29 +49,25 @@ static void dma_clear_interrupt_flags(dma_handle_t *hdma)
     }
     uint32_t stream_base = controller_address + 0x010UL;
     uint32_t stream_id = (stream_address - (stream_base))/(0x018UL);
-    uint32_t mask = 0x03DUL;
+    uint32_t mask = 0x3DUL; // 0b0000 0011 1101
     if (stream_id == 0)
     {
-      *dma_flag_pointer &= ~(mask);
+      *dma_flag_pointer |= (mask);
     }
     else if (stream_id == 1)
     {
-      *dma_flag_pointer &= ~(mask << 6);
+      *dma_flag_pointer |= (mask << 6);
     }
     else if (stream_id == 2)
     {
-      *dma_flag_pointer &= ~(mask << 16);
+      *dma_flag_pointer |= (mask << 16);
     }
     else if (stream_id == 3)
     {
-      *dma_flag_pointer &= ~(mask << 22);
+      *dma_flag_pointer |= (mask << 22);
     }
 }
-void dma_disable(dma_handle_t *hdma)
-{
-  hdma->stream->CR &= ~(DMA_SxCR_EN_Msk);
-  while(hdma->stream->CR & DMA_SxCR_EN_Msk); //wait for dma to be disabled
-}
+
 static void dma_config_endpoints(dma_handle_t *hdma)
 {
     if (hdma->p_periph != NULL)
@@ -79,7 +82,7 @@ static void dma_config_endpoints(dma_handle_t *hdma)
     {
       hdma->stream->M1AR = hdma->p_memory1;
     }
-    hdma->stream->NDTR = hdma->data_length;
+    hdma->stream->NDTR = (uint32_t) hdma->data_length;
 }
 
 static void dma_enable(dma_handle_t *hdma)
