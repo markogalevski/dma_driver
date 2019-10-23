@@ -6,8 +6,17 @@ static void dma_enable(dma_handle_t *hdma);
 
 void dma_transfer(dma_handle_t *hdma)
 {
+
   // Init procedure specified in 9.3.17 of the RM
   dma_disable(hdma);
+  if (hdma->controller == DMA1)
+  {
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+  }
+  else if (hdma->controller == DMA2)
+  {
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+  }
   dma_config_endpoints(hdma);
   hdma->stream->CR &= ~(DMA_SxCR_CHSEL_Msk);
   hdma->stream->CR |= hdma->init->channel_select << DMA_SxCR_CHSEL_Pos;
