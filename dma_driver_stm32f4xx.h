@@ -96,7 +96,7 @@ typedef struct
   uint32_t *p_memory1; //memory 1 is destination in M2M transfers
   uint32_t *p_periph;
   uint16_t data_length;
-} dma_handle_t;
+} dma_t;
 
 typedef enum
 {
@@ -107,8 +107,8 @@ typedef enum
   fifo_error = 7
 }dma_it_t;
 
-void dma_transfer(dma_handle_t *hdma);
-void dma_disable(dma_handle_t *hdma);
-void dma_enable_interrupt(dma_handle_t *hdma, dma_it_t interrupt);
-void dma_disable_interrupt(dma_handle_t *hdma, dma_it_t interrupt);
+void dma_transfer(dma_t *hdma);
+void dma_disable(dma_t *hdma);
+void dma_enable_interrupt(dma_t *hdma, dma_it_t interrupt);
+void dma_disable_interrupt(dma_t *hdma, dma_it_t interrupt);
 #endif /* DMA_DRIVER */

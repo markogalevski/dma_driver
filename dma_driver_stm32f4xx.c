@@ -1,10 +1,10 @@
 #include "dma_driver_stm32f4xx.h"
 
-static void dma_clear_interrupt_flags(dma_handle_t *hdma);
-static void dma_config_endpoints(dma_handle_t *hdma);
-static void dma_enable(dma_handle_t *hdma);
+static void dma_clear_interrupt_flags(dma_t *hdma);
+static void dma_config_endpoints(dma_t *hdma);
+static void dma_enable(dma_t *hdma);
 
-void dma_transfer(dma_handle_t *hdma)
+void dma_transfer(dma_t *hdma)
 {
 
   // Init procedure specified in 9.3.17 of the RM
@@ -48,13 +48,13 @@ void dma_transfer(dma_handle_t *hdma)
   dma_enable(hdma);
 }
 
-void dma_disable(dma_handle_t *hdma)
+void dma_disable(dma_t *hdma)
 {
   hdma->stream->CR &= ~(DMA_SxCR_EN_Msk);
   while(hdma->stream->CR & DMA_SxCR_EN_Msk); //wait for dma to be disabled
 }
 
-static void dma_clear_interrupt_flags(dma_handle_t *hdma)
+static void dma_clear_interrupt_flags(dma_t *hdma)
 {
     uint32_t stream_address = *((uint32_t *) &hdma->stream);
     uint32_t controller_address = *((uint32_t *) &hdma->controller);
@@ -89,7 +89,7 @@ static void dma_clear_interrupt_flags(dma_handle_t *hdma)
     }
 }
 
-static void dma_config_endpoints(dma_handle_t *hdma)
+static void dma_config_endpoints(dma_t *hdma)
 {
     if (hdma->p_periph != NULL)
     {
@@ -106,12 +106,12 @@ static void dma_config_endpoints(dma_handle_t *hdma)
     hdma->stream->NDTR = (uint32_t) hdma->data_length;
 }
 
-static void dma_enable(dma_handle_t *hdma)
+static void dma_enable(dma_t *hdma)
 {
   hdma->stream->CR |= (DMA_SxCR_EN);
 }
 
-void dma_enable_interrupt(dma_handle_t *hdma, dma_it_t interrupt)
+void dma_enable_interrupt(dma_t *hdma, dma_it_t interrupt)
 {
   if (interrupt != fifo_error)
   {
@@ -123,7 +123,7 @@ void dma_enable_interrupt(dma_handle_t *hdma, dma_it_t interrupt)
   }
 }
 
-void dma_disable_interrupt(hdma_handle_t *hdma, dma_it_t interrupt)
+void dma_disable_interrupt(dma_t *hdma, dma_it_t interrupt)
 {
   if (interrupt != fifo_error)
   {
