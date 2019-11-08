@@ -1,5 +1,5 @@
 #include "dma_driver_stm32f4xx.h"
-
+#include <stdlib.h>
 static void dma_clear_interrupt_flags(dma_t *hdma);
 static void dma_config_endpoints(dma_t *hdma);
 static void dma_enable(dma_t *hdma);
@@ -19,14 +19,14 @@ void dma_transfer(dma_t *hdma)
   }
   dma_config_endpoints(hdma);
   hdma->stream->CR &= ~(DMA_SxCR_CHSEL_Msk);
-  hdma->stream->CR |= hdma->init->channel_select << DMA_SxCR_CHSEL_Pos;
+  hdma->stream->CR |= hdma->init.channel_select << DMA_SxCR_CHSEL_Pos;
   hdma->stream->CR &= ~(DMA_SxCR_PFCTRL_Msk);
-  hdma->stream->CR |= hdma->init->peripheral_flow_ctrl << DMA_SxCR_PFCTRL_Pos;
+  hdma->stream->CR |= hdma->init.peripheral_flow_ctrl << DMA_SxCR_PFCTRL_Pos;
   hdma->stream->CR &= ~(DMA_SxCR_PL_Msk);
-  hdma->stream->CR |= hdma->init->stream_priority_level << DMA_SxCR_PL_Pos;
+  hdma->stream->CR |= hdma->init.stream_priority_level << DMA_SxCR_PL_Pos;
   hdma->stream->FCR &= ~(DMA_SxFCR_DMDIS_Msk | DMA_SxFCR_FTH_Msk);
-  hdma->stream->FCR |= hdma->fifo_config->direct_mode_disable << DMA_SxFCR_DMDIS_Pos
-                      | (hdma->fifo_config->fifo_threshold << DMA_SxFCR_FTH_Pos);
+  hdma->stream->FCR |= hdma->fifo_config.direct_mode_disable << DMA_SxFCR_DMDIS_Pos
+                      | (hdma->fifo_config.fifo_threshold << DMA_SxFCR_FTH_Pos);
   hdma->stream->CR &= ~(DMA_SxCR_DIR_Msk
                          | DMA_SxCR_PINC_Msk
                          | DMA_SxCR_PINCOS_Msk
@@ -35,14 +35,14 @@ void dma_transfer(dma_t *hdma)
                          | DMA_SxCR_MBURST_Msk
                          | DMA_SxCR_CIRC_Msk
                          | DMA_SxCR_DBM_Msk);
-  hdma->stream->CR |= hdma->init->transfer_dir << DMA_SxCR_DIR_Pos
-                     | hdma->init->peripheral_increment_mode << DMA_SxCR_PINC_Pos
-                     | hdma->init->peripheral_increment_offset << DMA_SxCR_PINCOS_Pos
-                     | hdma->init->memory_increment_mode << DMA_SxCR_MINC_Pos
-                     | hdma->init->peripheral_burst_transfer << DMA_SxCR_PBURST_Pos
-                     | hdma->init->memory_burst_transfer << DMA_SxCR_MBURST_Pos
-                     | hdma->init->circular_mode << DMA_SxCR_CIRC_Pos
-                     | hdma->init->double_buffer_mode << DMA_SxCR_DBM_Pos;
+  hdma->stream->CR |= hdma->init.transfer_dir << DMA_SxCR_DIR_Pos
+                     | hdma->init.peripheral_increment_mode << DMA_SxCR_PINC_Pos
+                     | hdma->init.peripheral_increment_offset << DMA_SxCR_PINCOS_Pos
+                     | hdma->init.memory_increment_mode << DMA_SxCR_MINC_Pos
+                     | hdma->init.peripheral_burst_transfer << DMA_SxCR_PBURST_Pos
+                     | hdma->init.memory_burst_transfer << DMA_SxCR_MBURST_Pos
+                     | hdma->init.circ_mode_en << DMA_SxCR_CIRC_Pos
+                     | hdma->init.double_buffer_en << DMA_SxCR_DBM_Pos;
 
   dma_clear_interrupt_flags(hdma);
   dma_enable(hdma);
@@ -95,11 +95,11 @@ static void dma_config_endpoints(dma_t *hdma)
     {
       hdma->stream->PAR = hdma->p_periph;
     }
-    if (hdma->stream->p_memory0 != NULL)
+    if (hdma->p_memory0 != NULL)
     {
       hdma->stream->M0AR = hdma->p_memory0;
     }
-    if (hdma->stream->p_memory1 != NULL)
+    if (hdma->p_memory1 != NULL)
     {
       hdma->stream->M1AR = hdma->p_memory1;
     }
