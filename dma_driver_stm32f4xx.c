@@ -1,10 +1,10 @@
 #include "dma_driver_stm32f4xx.h"
 #include <stdlib.h>
-static void dma_clear_interrupt_flags(dma_t *hdma);
-static void dma_config_endpoints(dma_t *hdma);
-static void dma_enable(dma_t *hdma);
+static void dma_clear_interrupt_flags(dma_handle_t *hdma);
+static void dma_config_endpoints(dma_handle_t *hdma);
+static void dma_enable(dma_handle_t *hdma);
 
-void dma_transfer(dma_t *hdma)
+void dma_transfer(dma_handle_t *hdma)
 {
 
   // Init procedure specified in 9.3.17 of the RM
@@ -18,6 +18,7 @@ void dma_transfer(dma_t *hdma)
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
   }
   dma_config_endpoints(hdma);
+
   hdma->stream->CR &= ~(DMA_SxCR_CHSEL_Msk);
   hdma->stream->CR |= hdma->init.channel_select << DMA_SxCR_CHSEL_Pos;
   hdma->stream->CR &= ~(DMA_SxCR_PFCTRL_Msk);
@@ -48,13 +49,13 @@ void dma_transfer(dma_t *hdma)
   dma_enable(hdma);
 }
 
-void dma_disable(dma_t *hdma)
+void dma_disable(dma_handle_t *hdma)
 {
   hdma->stream->CR &= ~(DMA_SxCR_EN_Msk);
   while(hdma->stream->CR & DMA_SxCR_EN_Msk); //wait for dma to be disabled
 }
 
-static void dma_clear_interrupt_flags(dma_t *hdma)
+static void dma_clear_interrupt_flags(dma_handle_t *hdma)
 {
     uint32_t stream_address = *((uint32_t *) &hdma->stream);
     uint32_t controller_address = *((uint32_t *) &hdma->controller);
@@ -62,11 +63,11 @@ static void dma_clear_interrupt_flags(dma_t *hdma)
     uint32_t *dma_flag_pointer;
     if (stream_offset <= 0x058UL)
     {
-      dma_flag_pointer = hdma->controller->LIFCR;
+      dma_flag_pointer = (uint32_t *) hdma->controller->LIFCR;
     }
     else
     {
-      dma_flag_pointer = hdma->controller->HIFCR;
+      dma_flag_pointer = (uint32_t *) hdma->controller->HIFCR;
     }
     uint32_t stream_base = controller_address + 0x010UL;
     uint32_t stream_id = (stream_address - (stream_base))/(0x018UL);
@@ -89,29 +90,29 @@ static void dma_clear_interrupt_flags(dma_t *hdma)
     }
 }
 
-static void dma_config_endpoints(dma_t *hdma)
+static void dma_config_endpoints(dma_handle_t *hdma)
 {
     if (hdma->p_periph != NULL)
     {
-      hdma->stream->PAR = hdma->p_periph;
+      hdma->stream->PAR = (uint32_t) hdma->p_periph;
     }
     if (hdma->p_memory0 != NULL)
     {
-      hdma->stream->M0AR = hdma->p_memory0;
+      hdma->stream->M0AR = (uint32_t) hdma->p_memory0;
     }
     if (hdma->p_memory1 != NULL)
     {
-      hdma->stream->M1AR = hdma->p_memory1;
+      hdma->stream->M1AR = (uint32_t) hdma->p_memory1;
     }
     hdma->stream->NDTR = (uint32_t) hdma->data_length;
 }
 
-static void dma_enable(dma_t *hdma)
+static void dma_enable(dma_handle_t *hdma)
 {
   hdma->stream->CR |= (DMA_SxCR_EN);
 }
 
-void dma_enable_interrupt(dma_t *hdma, dma_it_t interrupt)
+void dma_enable_interrupt(dma_handle_t *hdma, dma_interrupt_t interrupt)
 {
   if (interrupt != fifo_error)
   {
@@ -123,7 +124,7 @@ void dma_enable_interrupt(dma_t *hdma, dma_it_t interrupt)
   }
 }
 
-void dma_disable_interrupt(dma_t *hdma, dma_it_t interrupt)
+void dma_disable_interrupt(dma_handle_t *hdma, dma_interrupt_t interrupt)
 {
   if (interrupt != fifo_error)
   {
