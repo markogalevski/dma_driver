@@ -4,7 +4,7 @@ static void dma_clear_interrupt_flags(dma_handle_t *hdma);
 static void dma_config_endpoints(dma_handle_t *hdma);
 static void dma_enable(dma_handle_t *hdma);
 
-void dma_transfer(dma_handle_t *hdma)
+void dma_init(dma_handle_t *hdma)
 {
 
   // Init procedure specified in 9.3.17 of the RM
@@ -17,17 +17,20 @@ void dma_transfer(dma_handle_t *hdma)
   {
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
   }
-  dma_config_endpoints(hdma);
 
   hdma->stream->CR &= ~(DMA_SxCR_CHSEL_Msk);
   hdma->stream->CR |= hdma->init.channel_select << DMA_SxCR_CHSEL_Pos;
+
   hdma->stream->CR &= ~(DMA_SxCR_PFCTRL_Msk);
   hdma->stream->CR |= hdma->init.peripheral_flow_ctrl << DMA_SxCR_PFCTRL_Pos;
+
   hdma->stream->CR &= ~(DMA_SxCR_PL_Msk);
   hdma->stream->CR |= hdma->init.stream_priority_level << DMA_SxCR_PL_Pos;
+
   hdma->stream->FCR &= ~(DMA_SxFCR_DMDIS_Msk | DMA_SxFCR_FTH_Msk);
   hdma->stream->FCR |= hdma->fifo_config.direct_mode_disable << DMA_SxFCR_DMDIS_Pos
                       | (hdma->fifo_config.fifo_threshold << DMA_SxFCR_FTH_Pos);
+
   hdma->stream->CR &= ~(DMA_SxCR_DIR_Msk
                          | DMA_SxCR_PINC_Msk
                          | DMA_SxCR_PINCOS_Msk
@@ -36,6 +39,7 @@ void dma_transfer(dma_handle_t *hdma)
                          | DMA_SxCR_MBURST_Msk
                          | DMA_SxCR_CIRC_Msk
                          | DMA_SxCR_DBM_Msk);
+
   hdma->stream->CR |= hdma->init.transfer_dir << DMA_SxCR_DIR_Pos
                      | hdma->init.peripheral_increment_mode << DMA_SxCR_PINC_Pos
                      | hdma->init.peripheral_increment_offset << DMA_SxCR_PINCOS_Pos
@@ -46,7 +50,35 @@ void dma_transfer(dma_handle_t *hdma)
                      | hdma->init.double_buffer_en << DMA_SxCR_DBM_Pos;
 
   dma_clear_interrupt_flags(hdma);
-  dma_enable(hdma);
+}
+
+void dma_transfer(dma_handle_t *hdma, uint32_t *dst, uint32_t *src, uint32_t data_length)
+{
+	uint32_t direction_state = hdma->stream->CR & DMA_SxCR_DIR_Msk;
+	  if (direction_state == DMA_DIR_P2M)
+		{
+		  hdma->p_periph = src;
+		  hdma->p_memory0 = dst;
+		  hdma->p_memory1 = NULL;
+
+		}
+	  else if (direction_state == DMA_DIR_M2P)
+	  {
+		  hdma->p_memory0 = src;
+		  hdma->p_periph = dst;
+		  hdma->p_memory1 = NULL;
+	  }
+	  else
+	  {
+		  hdma->p_memory0 = src;
+		  hdma->p_memory1 = dst;
+		  hdma->p_periph = NULL;
+	  }
+	  hdma->data_length = data_length;
+
+	  dma_config_endpoints(hdma);
+	  dma_enable(hdma);
+
 }
 
 void dma_disable(dma_handle_t *hdma)

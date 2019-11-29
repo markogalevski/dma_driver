@@ -107,7 +107,8 @@ typedef enum
   fifo_error = 7
 }dma_interrupt_t;
 
-void dma_transfer(dma_handle_t *hdma);
+void dma_init(dma_handle_t *hdma);
+void dma_transfer(dma_handle_t *hdma, uint32_t *src, uint32_t *dst, uint32_t data_length);
 void dma_disable(dma_handle_t *hdma);
 void dma_enable_interrupt(dma_handle_t *hdma, dma_interrupt_t interrupt);
 void dma_disable_interrupt(dma_handle_t *hdma, dma_interrupt_t interrupt);
