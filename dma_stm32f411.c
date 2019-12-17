@@ -1,4 +1,4 @@
-#include "dma_driver_stm32f4xx.h"
+#include <dma_interface.h>
 #include <stdlib.h>
 static void dma_clear_interrupt_flags(dma_handle_t *hdma);
 static void dma_config_endpoints(dma_handle_t *hdma);
